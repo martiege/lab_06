@@ -8,6 +8,7 @@
 struct PoseEstimate
 {
   Sophus::SE3d pose_W_C;                        /// Camera pose in the world.
+  Eigen::Matrix<double, 6, 6> poseCovariance;   /// Pose covariance
   std::vector<cv::Point2f> image_inlier_points; /// 2D inlier image points.
   std::vector<cv::Point3f> world_inlier_points; /// 3D inlier world points.
 
@@ -32,7 +33,8 @@ public:
   /// \param world_points 3D world points.
   /// \return The results. Check PoseEstimate::isFound() to check if solution was found.
   virtual PoseEstimate estimate(const std::vector<cv::Point2f>& image_points,
-                                const std::vector<cv::Point3f>& world_points) = 0;
+                                const std::vector<cv::Point3f>& world_points,
+                                const std::vector<float>& matched_distances) = 0;
 
   /// \brief Shared pointer to PoseEstimator, for convenience.
   using Ptr = std::shared_ptr<PoseEstimator>;

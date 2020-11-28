@@ -17,7 +17,8 @@ public:
   /// \param world_points 3D planar world points.
   /// \return The results. Check PoseEstimate::isFound() to check if solution was found.
   PoseEstimate estimate(const std::vector<cv::Point2f>& image_points,
-                        const std::vector<cv::Point3f>& world_points) override;
+                        const std::vector<cv::Point3f>& world_points,
+                        const std::vector<float>& matched_distances) override;
 
 private:
   cv::Matx33d K_;

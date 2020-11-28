@@ -10,7 +10,8 @@ PnPPoseEstimator::PnPPoseEstimator(const Eigen::Matrix3d& K, bool do_iterative_a
 }
 
 PoseEstimate PnPPoseEstimator::estimate(const std::vector<cv::Point2f>& image_points,
-                                        const std::vector<cv::Point3f>& world_points)
+                                        const std::vector<cv::Point3f>& world_points,
+                                        const std::vector<float>& matched_distances)
 {
   // Set a minimum required number of points,
   // here 3 times the theoretic minimum.
@@ -66,5 +67,5 @@ PoseEstimate PnPPoseEstimator::estimate(const std::vector<cv::Point2f>& image_po
 
   // Return camera pose in the world.
   Sophus::SE3d pose_C_W(R, t);
-  return {pose_C_W.inverse(), inlier_image_points, inlier_world_points};
+  return {pose_C_W.inverse(), Eigen::MatrixXd::Zero(6, 6), inlier_image_points, inlier_world_points};
 }

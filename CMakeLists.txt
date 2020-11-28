@@ -1,4 +1,5 @@
-cmake_minimum_required( VERSION 3.5.1 )
+cmake_minimum_required( VERSION 3.14 )
+set(CMAKE_CXX_STANDARD 17)
 
 project(lab_6_pose)
 
@@ -11,9 +12,10 @@ else ()
 endif (MSVC)
 
 # Add libraries.
-find_package(OpenCV 4 CONFIG REQUIRED)
+find_package(OpenCV 4.0.1 CONFIG REQUIRED)
 find_package(Eigen3 3.3.4 CONFIG REQUIRED)
 find_package(Sophus CONFIG REQUIRED)
+find_package(Matplot++)
 
 add_executable(${PROJECT_NAME}
   lab_6.h
@@ -36,12 +38,13 @@ add_executable(${PROJECT_NAME}
   pose_estimator.h
   scene_3d.h
   scene_3d.cpp
-  )
+        )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PUBLIC
   ${OpenCV_LIBS}
   Eigen3::Eigen
   Sophus::Sophus
+  Matplot++::matplot
   )
 
 target_compile_options(${PROJECT_NAME} PRIVATE ${compiler_options})

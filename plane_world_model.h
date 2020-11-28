@@ -19,16 +19,17 @@ public:
   /// \param[out] world_points 3D world points corresponding to image points.
   void findCorrespondences(const cv::Mat& frame,
                            std::vector<cv::Point2f>& image_points,
-                           std::vector<cv::Point3f>& world_points) const;
+                           std::vector<cv::Point3f>& world_points,
+                           std::vector<float>& match_distances) const;
 
   /// \return The world map image.
-  cv::Mat worldImage() const;
+  [[nodiscard]] cv::Mat worldImage() const;
 
   /// \return The physical size of the world map in meters.
-  cv::Size2d worldSize() const;
+  [[nodiscard]] cv::Size2d worldSize() const;
 
   /// \return The physical size of the grid cells in meters.
-  double gridSize() const;
+  [[nodiscard]] double gridSize() const;
 
 private:
   void constructWorld();

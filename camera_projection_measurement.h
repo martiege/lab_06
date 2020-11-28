@@ -12,7 +12,7 @@ public:
   /// \brief Constructs the measurement.
   /// \param normalized_plane_point Measured image point as normalized image coordinate.
   /// \param world_point Corresponding world point in world coordinate system.
-  CameraProjectionMeasurement(const Eigen::Vector2d& normalized_plane_point, const Eigen::Vector3d& world_point);
+  CameraProjectionMeasurement(const Eigen::Vector2d& normalized_plane_point, const Eigen::Vector3d& world_point, const double& point_covariance);
 
   /// \brief Linearized the measurement prediction function at the current state.
   /// \param current_state Current estimate of the camera pose T_w_c.
@@ -26,6 +26,7 @@ public:
 private:
   Eigen::Vector3d world_point_;
   Eigen::Vector2d normalized_plane_point_;
+  double inv_root_point_covariance_;
 };
 
 /// \brief Struct for linearization of measurement prediction function.

@@ -1,6 +1,7 @@
 #include "plane_world_model.h"
 #include "feature_utils.h"
 #include "opencv2/imgproc.hpp"
+#include "opencv2/features2d.hpp"
 #include "opencv2/xfeatures2d.hpp"
 
 class PlaneReference
@@ -49,6 +50,7 @@ void PlaneWorldModel::constructWorld()
   cv::cvtColor(world_image_, gray_img, cv::COLOR_BGR2GRAY);
 
   // Set up objects for detection, description and matching.
+  // detector_ = cv::ORB::create();
   detector_ = cv::xfeatures2d::SURF::create();
   desc_extractor_ = detector_;
   matcher_ = cv::BFMatcher::create(desc_extractor_->defaultNorm());
@@ -83,10 +85,12 @@ void PlaneWorldModel::constructWorld()
 
 void PlaneWorldModel::findCorrespondences(const cv::Mat& frame,
                                              std::vector<cv::Point2f> &image_points,
-                                             std::vector<cv::Point3f> &world_points) const
+                                             std::vector<cv::Point3f> &world_points,
+                                             std::vector<float>& match_distances) const
 {
   image_points.clear();
   world_points.clear();
+  match_distances.clear();
 
   std::vector<cv::KeyPoint> keypoints;
   detector_->detect(frame, keypoints);
@@ -101,10 +105,12 @@ void PlaneWorldModel::findCorrespondences(const cv::Mat& frame,
 
   image_points.reserve(good_matches.size());
   world_points.reserve(good_matches.size());
+  match_distances.reserve(good_matches.size());
   for (auto& match : good_matches)
   {
     image_points.push_back(keypoints[match.queryIdx].pt);
     world_points.push_back(world_points_[match.trainIdx]);
+    match_distances.push_back(match.distance);
   }
 }
 

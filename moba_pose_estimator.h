@@ -15,23 +15,26 @@ public:
   /// \param focal_lengths Focal lengths from camera calibration.
   MobaPoseEstimator(PoseEstimator::Ptr initial_pose_estimator,
       const Eigen::Vector2d& principal_point,
-      const Eigen::Vector2d& focal_lengths);
+      const Eigen::Vector2d& focal_lengths,
+      bool use_distances_as_std);
 
   /// \brief Estimates camera pose from 3D-2D correspondences.
   /// \param image_points 2D image points.
   /// \param world_points 3D planar world points.
   /// \return The results. Check PoseEstimate::isFound() to check if solution was found.
   PoseEstimate estimate(const std::vector<cv::Point2f>& image_points,
-                        const std::vector<cv::Point3f>& world_points) override;
+                        const std::vector<cv::Point3f>& world_points,
+                        const std::vector<float>& matched_distances) override;
 
 private:
   PoseEstimator::Ptr initial_pose_estimator_;
   Eigen::Vector2d principal_point_;
   Eigen::Vector2d focal_lengths_;
+  bool use_distances_as_std_;
 
   // Gauss-Newton optimization, minimizing reprojection error
-  Sophus::SE3d optimize(const std::vector<CameraProjectionMeasurement>& measurements,
-                        const Sophus::SE3d& initial_pose);
+  void optimize(const std::vector<CameraProjectionMeasurement>& measurements,
+                PoseEstimate& initial_pose);
 
   // Transforming pixels to normalized image coordinates.
   Eigen::Vector2d toNormalized(const Eigen::Vector2d& pixel);

@@ -9,7 +9,8 @@ HomographyPoseEstimator::HomographyPoseEstimator(const Eigen::Matrix3d& K)
 
 
 PoseEstimate HomographyPoseEstimator::estimate(const std::vector<cv::Point2f>& image_points,
-                                               const std::vector<cv::Point3f>& world_points)
+                                               const std::vector<cv::Point3f>& world_points,
+                                               const std::vector<float>& matched_distances)
 {
   // Set a minimum required number of points,
   // here 3 times the theoretic minimum.
@@ -49,6 +50,7 @@ PoseEstimate HomographyPoseEstimator::estimate(const std::vector<cv::Point2f>& i
   // TODO 2: Compute M.
   // Compute the matrix M
   Eigen::Matrix3d M;
+  M = K_.lu().solve(H); 
 
   // Extract M_bar (the two first columns of M).
   Eigen::MatrixXd M_bar = M.leftCols<2>();
@@ -60,24 +62,39 @@ PoseEstimate HomographyPoseEstimator::estimate(const std::vector<cv::Point2f>& i
   // Compute R_bar (the two first columns of R)
   // from the result of the SVD.
   Eigen::Matrix<double, 3, 2> R_bar;
+  R_bar = svd.matrixU() * svd.matrixV().transpose(); 
 
   // TODO 4: Construct R.
   // Construct R by inserting R_bar and
   // computing the third column of R from the two first.
   // Remember to check det(R)!
   Eigen::Matrix3d R = Eigen::Matrix3d::Identity();
+  R.col(0) = R_bar.col(0); 
+  R.col(1) = R_bar.col(1);
+  R.col(2) = R_bar.col(0).cross(R_bar.col(1)); 
+
+  if (R.determinant() < 0.0)
+    R.col(2) *= -1; 
 
   // TODO 5: Compute the scale.
   // Compute the scale factor lambda.
-  double lambda = 0.0;
+  double lambda = 
+    (R_bar.transpose() * M).trace() / 
+    (M.transpose() * M).trace(); 
 
   // TODO 6: Find correct solution.
   // Extract the translation t.
   // Check that this is the correct solution
   // by testing the last element of t.
-  Eigen::Vector3d t = Eigen::Vector3d::Zero();
+  Eigen::Vector3d t = lambda * M.col(2);
+  if (t.z() < 0)
+  {
+    t *= -1; 
+    R.col(0) *= -1; 
+    R.col(1) *= -1; 
+  }
 
   // Return camera pose in the world.
   Sophus::SE3d pose_C_W(R, t);
-  return {pose_C_W.inverse(), inlier_image_points, inlier_world_points};
+  return {pose_C_W.inverse(), Eigen::MatrixXd::Zero(6, 6), inlier_image_points, inlier_world_points};
 }
