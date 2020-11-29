@@ -11,6 +11,7 @@ struct PoseEstimate
   Eigen::Matrix<double, 6, 6> poseCovariance;   /// Pose covariance
   std::vector<cv::Point2f> image_inlier_points; /// 2D inlier image points.
   std::vector<cv::Point3f> world_inlier_points; /// 3D inlier world points.
+  std::pair<double, double> cost;
 
   /// \brief Checks if estimation succeeded.
   /// \return True if result was found.

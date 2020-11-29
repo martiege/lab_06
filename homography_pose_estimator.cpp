@@ -96,5 +96,5 @@ PoseEstimate HomographyPoseEstimator::estimate(const std::vector<cv::Point2f>& i
 
   // Return camera pose in the world.
   Sophus::SE3d pose_C_W(R, t);
-  return {pose_C_W.inverse(), Eigen::MatrixXd::Zero(6, 6), inlier_image_points, inlier_world_points};
+  return {pose_C_W.inverse(), Eigen::MatrixXd::Zero(6, 6), inlier_image_points, inlier_world_points, std::make_pair(0, 0)};
 }

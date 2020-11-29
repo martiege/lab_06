@@ -88,46 +88,19 @@ MobaPoseEstimator::optimize(const std::vector<CameraProjectionMeasurement>& meas
       b.segment(measure_dim*j, measure_dim) = linearization.b;
     }
 
-    // Compute current cost.
-    // curr_cost = b.squaredNorm();
-
-    // Remove when done!
-    // std::cout << "Cost before update: " << curr_cost << std::endl;
+    if (iteration == 0)
+      initial_pose.cost.first = b.squaredNorm();
 
     // Solve linearized system.
     Sophus::SE3d::Tangent update = A.householderQr().solve(b);
     current_state = current_state * Sophus::SE3d::exp(update);
-//    Eigen::MatrixXd ATA = A.transpose() * A;
-//    Eigen::MatrixXd diagonalATA = ATA.diagonal().asDiagonal().toDenseMatrix();
-//
-//    Sophus::SE3d::Tangent update = (ATA + lambda * diagonalATA).householderQr().solve(A.transpose() * b);
-//
-//    Sophus::SE3d updated_state = current_state * Sophus::SE3d::exp(update);
-//
-//    for (size_t j=0; j < measurements.size(); ++j)
-//    {
-//      const LinearizedCameraProjectionMeasurement linearization = measurements[j].linearize(updated_state, measurement_noise_sqrt_lu_);
-//
-//      A.block(measure_dim*j, 0, measure_dim, state_dim) = linearization.A;
-//      b.segment(measure_dim*j, measure_dim) = linearization.b;
-//    }
-//
-//    if (b.squaredNorm() < curr_cost)
-//    {
-//      // Update state.
-//      current_state = updated_state;
-//      lambda /= 10;
-//    }
-//    else
-//    {
-//      lambda *= 10;
-//    }
 //
 
     ++iteration;
   }
 
   covariance = (A.transpose() * A).inverse();
+  initial_pose.cost.second = b.squaredNorm();
 
   initial_pose.pose_W_C = current_state;
   initial_pose.poseCovariance = covariance;

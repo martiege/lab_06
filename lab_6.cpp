@@ -124,7 +124,7 @@ void lab6()
   std::map<std::string, std::pair<std::shared_ptr<PoseEstimator>, matplot::color>> pose_estimators;
   // pose_estimators["PnPPoseEstimator"] = std::make_shared<PnPPoseEstimator>(camera_model.K);
   // pose_estimators["HomographyEstimator"] = std::make_shared<HomographyPoseEstimator>(camera_model.K);
-  pose_estimators["MOBA2"] = std::make_pair(
+  pose_estimators["impr"] = std::make_pair(
       std::make_shared<MobaPoseEstimator>(
           init_estimator,
           camera_model.principalPoint(),
@@ -133,7 +133,7 @@ void lab6()
       ),
       matplot::color::blue
   );
-  pose_estimators["MOBA1"] = std::make_pair(
+  pose_estimators["orig"] = std::make_pair(
     std::make_shared<MobaPoseEstimator>(
       init_estimator,
       camera_model.principalPoint(),
@@ -208,9 +208,25 @@ void lab6()
     for (const auto& it : pose_estimators)
     {
       PoseEstimate estimate = it.second.first->estimate(matched_image_points, matched_world_points, matched_distances);
+
+      estimates[it.first]["t"]["t"].push_back(i);
+
       if (estimate.isFound())
       {
-        estimates[it.first]["t"]["t"].push_back(i);
+        if (estimate.cost.first <= 0)
+          std::cout << "First cost less than zero: " << estimate.cost.first << '\n';
+        else
+        {
+          estimates[it.first]["cost"]["init_cost"].push_back(estimate.cost.first);
+          estimates[it.first]["cost"]["init_t"].push_back(i);
+        }
+        if (estimate.cost.second <= 0)
+          std::cout << "First cost less than zero: " << estimate.cost.second << '\n';
+        else
+        {
+          estimates[it.first]["cost"]["final_cost"].push_back(estimate.cost.second);
+          estimates[it.first]["cost"]["final_t"].push_back(i);
+        }
 
         estimates[it.first]["expected"]["x"].push_back(estimate.pose_W_C.translation().x());
         estimates[it.first]["expected"]["y"].push_back(estimate.pose_W_C.translation().y());
@@ -240,8 +256,6 @@ void lab6()
       {
         if (i == 0)
         {
-          estimates[it.first]["t"]["t"].push_back(0);
-
           estimates[it.first]["expected"]["x"].push_back(0);
           estimates[it.first]["expected"]["y"].push_back(0);
           estimates[it.first]["expected"]["z"].push_back(0);
@@ -268,8 +282,6 @@ void lab6()
         }
         else
         {
-          estimates[it.first]["t"]["t"].push_back(i);
-
           estimates[it.first]["expected"]["x"].push_back(estimates[it.first]["expected"]["x"].back());
           estimates[it.first]["expected"]["y"].push_back(estimates[it.first]["expected"]["y"].back());
           estimates[it.first]["expected"]["z"].push_back(estimates[it.first]["expected"]["z"].back());
@@ -344,6 +356,7 @@ void lab6()
 
     std::vector<std::string> l1, l2, l3, l4;
 
+    std::set<std::string> error_set;
     for (const auto &it1 : estimates)
     {
       std::vector<double> t = it1.second.at("t").at("t");
@@ -364,7 +377,6 @@ void lab6()
 
       l3.push_back(it1.first);
 
-      std::set<std::string> error_set;
       for (const auto& it2 : estimates)
       {
         if (it1.first == it2.first || (error_set.find(it1.first) != error_set.end() && error_set.find(it2.first) != error_set.end()))
@@ -428,6 +440,9 @@ void lab6()
     ax4->title("Error: " + state);
     ax4->legend(l4);
 
+    figure->save("/home/martin/dev/lab_06/results/" + state + "_with_covariance.png");
+    figure2->save("/home/martin/dev/lab_06/results/" + state + "_without_covariance.png");
+
     figure->save("/home/martin/dev/lab_06/results/" + state + "_with_covariance.svg");
     figure2->save("/home/martin/dev/lab_06/results/" + state + "_without_covariance.svg");
     // figure->show();
@@ -435,12 +450,17 @@ void lab6()
   // matplot::show();
 
   auto fig = matplot::figure();
+  auto fig2 = matplot::figure();
   fig->size(1920, 1080);
+  fig2->size(1920, 1080);
 
   auto ax = fig->add_axes();
   ax->hold(true);
 
-  std::vector<std::string> l;
+  auto ax2 = fig2->add_axes();
+  ax2->hold(true);
+
+  std::vector<std::string> l, l2;
   for (const auto &it1 : estimates)
   {
     ax->plot3(
@@ -450,6 +470,28 @@ void lab6()
     )->color(pose_estimators[it1.first].second);
 
     l.push_back(it1.first);
+
+    std::vector<double> e;
+    for (unsigned int i = 0; i < it1.second.at("cost").at("init_t").size(); ++i)
+      e.push_back(std::abs(it1.second.at("cost").at("init_cost").at(i) - it1.second.at("cost").at("final_cost").at(i)));
+
+    ax2->semilogy(it1.second.at("cost").at("init_t"),
+        e)->color(pose_estimators[it1.first].second);
+//    ax2->semilogy(
+//      it1.second.at("cost").at("init_t"),
+//      it1.second.at("cost").at("init_cost"),
+//      "--"
+//    )->color(pose_estimators[it1.first].second);
+//
+//    ax2->semilogy(
+//      it1.second.at("cost").at("final_t"),
+//      it1.second.at("cost").at("final_cost"),
+//      "+"
+//    )->color(pose_estimators[it1.first].second);
+
+    l2.push_back(it1.first);
+    // l2.push_back(it1.first + " init cost");
+    // l2.push_back(it1.first + " final cost");
   }
   ax->hold(false);
   ax->title("Trajectories");
@@ -458,7 +500,17 @@ void lab6()
   ax->zlabel("z");
   ax->legend(l);
 
+  ax2->hold(false);
+  ax2->title("Change in cost");
+  ax2->xlabel("Image");
+  ax2->ylabel("Cost");
+  ax2->legend(l2);
+
+  fig->save("/home/martin/dev/lab_06/results/trajectories.png");
+  fig2->save("/home/martin/dev/lab_06/results/cost.png");
+
   fig->save("/home/martin/dev/lab_06/results/trajectories.svg");
+  fig2->save("/home/martin/dev/lab_06/results/cost.svg");
 
   std::cout << "Done\n";
 }

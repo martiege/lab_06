@@ -37,7 +37,7 @@ LinearizedCameraProjectionMeasurement CameraProjectionMeasurement::linearize(con
   double x_n = x_n_pred.x(); 
   double y_n = x_n_pred.y(); 
   double x_n_y_n = x_n * y_n; 
-  linearization.A << -d,  0, d * x_n, x_n_y_n,       -1 - x_n * x_n,  y_n, 
+  linearization.A << -d,  0, d * x_n, x_n_y_n,       -1 - x_n * x_n,  y_n,
                       0, -d, d * y_n, 1 + y_n * y_n, - x_n_y_n,      -x_n; 
 
   linearization.A = inv_root_point_covariance_ * linearization.A;
