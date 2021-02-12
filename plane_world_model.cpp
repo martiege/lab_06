@@ -4,6 +4,8 @@
 #include "opencv2/features2d.hpp"
 #include "opencv2/xfeatures2d.hpp"
 
+#include <iostream>
+
 class PlaneReference
 {
 public:
@@ -110,7 +112,7 @@ void PlaneWorldModel::findCorrespondences(const cv::Mat& frame,
   {
     image_points.push_back(keypoints[match.queryIdx].pt);
     world_points.push_back(world_points_[match.trainIdx]);
-    match_distances.push_back(match.distance);
+    match_distances.push_back((keypoints[match.queryIdx].octave + 1) * 2.0);
   }
 }
 

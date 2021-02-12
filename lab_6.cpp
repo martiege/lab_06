@@ -203,8 +203,7 @@ void lab6()
     // Measure how long the processing takes.
     start = Clock::now();
     // PoseEstimate estimate = pose_estimator.estimate(matched_image_points, matched_world_points);
-    // PoseEstimate estimate = pose_estimators["MOBAPoseEstimator"]->estimate(matched_image_points, matched_world_points, matched_distances);
-
+    // PoseEstimate estimate = pose_estimators["impr"].first->estimate(matched_image_points, matched_world_points, matched_distances);
     for (const auto& it : pose_estimators)
     {
       PoseEstimate estimate = it.second.first->estimate(matched_image_points, matched_world_points, matched_distances);
